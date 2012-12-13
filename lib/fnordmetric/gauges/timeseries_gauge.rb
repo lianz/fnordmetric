@@ -2,7 +2,7 @@ class FnordMetric::TimeseriesGauge < FnordMetric::Gauge
 
   def initialize(opts)
     super(opts)
-    
+
     @opts[:series] = @opts[:series].map(&:to_sym)
 
     if @opts[:calculate]
@@ -10,7 +10,7 @@ class FnordMetric::TimeseriesGauge < FnordMetric::Gauge
         raise "unknown calculate option: #{@opts[:calculate]}"
       end
       @calculate = @opts[:calculate].to_sym
-    end 
+    end
 
     @calculate ||= :sum
     @calculate_proc = lambda{ |c,d| d > 0 ? (c/d.to_f).round(2) : c }
@@ -27,13 +27,13 @@ class FnordMetric::TimeseriesGauge < FnordMetric::Gauge
 
     @opts[:series].each do |series|
       ts = FnordMetric::Timeseries.new
-
-      fraction_values_in(@interval, series).each do |time, frac|
+      fvs = fraction_values_in(@interval, series)
+      fvs.each do |time, frac|
         @total += frac.first # FIXPAUL
         ts.incr_fraction(time, *frac)
       end
 
-      @series[series] = { 
+      @series[series] = {
         :color => colors.unshift(colors.pop).first,
         :data => Hash[@zooms.map{ |int| [int, ts.timeseries(@interval, int) ] }],
         :timeseries => ts
@@ -76,7 +76,7 @@ end
 
 # class FnordMetric::NumericGauge < FnordMetric::MultiGauge
 
-#   def initialize(opts)   
+#   def initialize(opts)
 #     super(opts)
 
 #     validate_series!
@@ -117,17 +117,17 @@ end
 
 
 
-      
+
 #   def render_series_numbers(series)
 #     _t = Time.now.to_i
 
 #     {}.tap do |out|
 #       @opts[:ticks].each do |tick|
-#         out["#{tick}-now"]  = { 
+#         out["#{tick}-now"]  = {
 #           :value => series_count_metrics[series][tick].value_at(_t),
 #           :desc  => "$formatTimeRangePre(#{tick}, 0)"
 #         }
-#         out["#{tick}-last"] = { 
+#         out["#{tick}-last"] = {
 #           :value => series_count_metrics[series][tick].value_at(_t-tick),
 #           :desc  => "$formatTimeRangePre(#{tick}, -1)"
 #         }

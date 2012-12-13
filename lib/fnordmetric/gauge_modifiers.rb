@@ -3,9 +3,9 @@ module FnordMetric::GaugeModifiers
   def incr(gauge_name, value=1)
     gauge = fetch_gauge(gauge_name)
     assure_two_dimensional!(gauge)
-    if gauge.unique? 
+    if gauge.unique?
       incr_uniq(gauge, value)
-    elsif gauge.average? 
+    elsif gauge.average?
       incr_avg(gauge, value)
     else
       incr_tick(gauge, value)
@@ -13,7 +13,7 @@ module FnordMetric::GaugeModifiers
   end
 
   def incr_tick(gauge, value)
-    if gauge.progressive?      
+    if gauge.progressive? 
       @redis.incrby(gauge.key(:head), value).callback do |head|
         @redis.hsetnx(gauge.key, gauge.tick_at(time), head).callback do |_new|
           @redis.hincrby(gauge.key, gauge.tick_at(time), value) unless _new
@@ -24,7 +24,7 @@ module FnordMetric::GaugeModifiers
         @redis.hincrby(gauge.key, gauge.tick_at(time), value)
       end
     end
-  end  
+  end
 
   def incr_uniq(gauge, value, field_name=nil)
     return false if session_key.blank?
@@ -47,7 +47,7 @@ module FnordMetric::GaugeModifiers
   def incr_field(gauge_name, field_name, value=1)
     gauge = fetch_gauge(gauge_name)
     assure_three_dimensional!(gauge)
-    if gauge.unique? 
+    if gauge.unique?
       incr_uniq(gauge, value, field_name)
     else
       incr_field_by(gauge, field_name, value)
@@ -58,7 +58,7 @@ module FnordMetric::GaugeModifiers
     @redis.zincrby(gauge.tick_key(time), value, field_name).callback do
       @redis.incrby(gauge.tick_key(time, :count), 1)
     end
-  end  
+  end
 
   def set_value(gauge_name, value)
     gauge = fetch_gauge(gauge_name)
@@ -91,29 +91,29 @@ module FnordMetric::GaugeModifiers
       raise "FIXPAUL: not yet implemented: progressive fraction gauges"
     end
 
-    ctx.redis_exec(:hincrby, retention_key(at, series_name), "#{tick_at(at)}-#{part}", value).callback do 
+    ctx.redis_exec(:hincrby, retention_key(at, series_name), "#{tick_at(at)}-#{part}", value).callback do
       ctx.redis_exec :expire,  retention_key(at, series_name)
     end
   end
-  
+
   def assure_has_series!
     return true if has_series?
-    error! "error: #{caller[0].split(" ")[-1]} can only be used with series gauges" 
+    error! "error: #{caller[0].split(" ")[-1]} can only be used with series gauges"
   end
 
   def assure_two_dimensional!(gauge)
     return true if gauge.two_dimensional?
-    error! "error: #{caller[0].split(" ")[-1]} can only be used with 2-dimensional gauges" 
+    error! "error: #{caller[0].split(" ")[-1]} can only be used with 2-dimensional gauges"
   end
 
   def assure_three_dimensional!(gauge)
     return true unless gauge.two_dimensional?
-    error! "error: #{caller[0].split(" ")[-1]} can only be used with 3-dimensional gauges" 
+    error! "error: #{caller[0].split(" ")[-1]} can only be used with 3-dimensional gauges"
   end
 
   def assure_non_progressive!(gauge)
     return true unless gauge.progressive?
-    error! "error: #{caller[0].split(" ")[-1]} can only be used with non-progressive gauges" 
+    error! "error: #{caller[0].split(" ")[-1]} can only be used with non-progressive gauges"
   end
 
   def assure_series_exists!(series_name)
@@ -123,7 +123,7 @@ module FnordMetric::GaugeModifiers
       return @opts[:series].first
     elsif !series_name.respond_to?(:to_sym) || !@opts[:series].include?(series_name.to_sym)
       error! "gauge '#{name}': unknown series: #{series_name}"
-    else 
+    else
       return series_name
     end
   end

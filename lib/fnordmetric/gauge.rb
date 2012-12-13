@@ -1,5 +1,5 @@
 class FnordMetric::Gauge
-  
+
   include FnordMetric::GaugeCalculations
   include FnordMetric::GaugeModifiers
   include FnordMetric::GaugeValidations
@@ -10,6 +10,21 @@ class FnordMetric::Gauge
     @opts = opts
   end
 
+  def tick_str
+    _tick = tick
+    if _tick == 1.day
+      str = 'daily'
+    elsif _tick == 1.week
+      str = 'weekly'
+    elsif _tick == 1.month
+      str = 'monthly'
+    else
+      str = _tick.to_s
+    end
+
+    str
+  end
+
   def tick
     (@opts[:tick] || @opts[:resolution] || 3600).to_i
   end
@@ -18,8 +33,31 @@ class FnordMetric::Gauge
     tick * 10 # FIXPAUL!
   end
 
-  def tick_at(time, _tick=tick)    
-    (time/_tick.to_f).floor*_tick
+  def i_tick_at(time, _tick=tick)
+    t = Time.at(time)
+
+    if _tick == 1.day
+      Time.local(t.year, t.month, t.day).to_i
+    elsif _tick == 1.week
+      t.strftime('%W').to_i * 86400 * 7
+    elsif _tick == 1.month
+      Time.local(t.year, t.month).to_i
+    else
+      (time/_tick.to_f).floor*_tick
+    end
+  end
+
+  def tick_at(time, _tick=tick)
+    if _tick == 1.day
+      tk = Time.at(time).strftime('%Y-%m-%d')
+    elsif _tick == 1.week
+      tk = Time.at(time).strftime('%Y#%W')
+    elsif _tick == 1.month
+      tk = Time.at(time).strftime('%Y-%m')
+    else
+      tk = (time/_tick.to_f).floor*_tick
+    end
+    tk
   end
 
   def name
@@ -37,9 +75,9 @@ class FnordMetric::Gauge
   def key_nouns
     @opts[:key_nouns] || ["Key", "Keys"]
   end
-  
+
   def key(_append=nil)
-    [@opts[:key_prefix], "gauge", name, tick, _append].flatten.compact.join("-")
+    [@opts[:key_prefix], "gauge", name, tick_str, _append].flatten.compact.join("-")
   end
 
   def tick_key(_time, _append=nil)
@@ -51,7 +89,8 @@ class FnordMetric::Gauge
   end
 
   def retention_key(_time, _append=nil)
-    key([tick_at(_time, retention).to_s, _append])
+    key([Time.at(_time).year.to_s, _append])
+#    key([tick_at(_time, retention).to_s, _append])
   end
 
   def two_dimensional?
@@ -89,5 +128,5 @@ class FnordMetric::Gauge
   def error!(msg)
     FnordMetric.error(msg)
   end
-  
+
 end

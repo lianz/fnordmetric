@@ -19,7 +19,7 @@ class FnordMetric::TimeseriesWidget < FnordMetric::Widget
     )
   end
 
-  def data    
+  def data
     super.merge(
       :series => series,
       :gauges => gauges.map(&:name),
@@ -35,12 +35,12 @@ class FnordMetric::TimeseriesWidget < FnordMetric::Widget
 
   def series
     colors = FnordMetric::COLORS.dup
-    
+
     gauges.map do |gauge|
-      { 
-        :name => gauge.name, 
-        :data => [{:x => ticks.first, :y => 0}], 
-        :color => colors.unshift(colors.pop).first 
+      {
+        :name => gauge.name,
+        :data => [{:x => ticks.first, :y => 0}],
+        :color => colors.unshift(colors.pop).first
       }
     end
   end

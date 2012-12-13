@@ -28,7 +28,7 @@ class FnordMetric::Widget
     else
       @gauges = gauges
     end
-    
+
     if (ticks = gauges.map{ |g| g.tick }).uniq.length == 1
       @tick = ticks.first
     elsif !!self.try(:has_tick?)
@@ -53,21 +53,25 @@ class FnordMetric::Widget
 
   def default_range(now=Time.now)
     ensure_has_tick!
-    te = gauges.first.tick_at(now.to_i)
-    te -= @tick unless include_current?
+#    now -= @tick unless include_current?
+    te = gauges.first.i_tick_at(now.to_i) + gauges.first.tick
+    p now.to_i
+    p te
     rs = (@opts[:ticks] || (@tick == 1.hour.to_i ? 24 : 30)).to_i
-    (te-(@tick*rs)..te)
+    r = (te-(@tick*rs)..te)
+    p r
+    r
   end
 
   def include_current?
     !(@opts[:include_current] == false)
   end
-    
+
   def data
-    { 
-      :title => @opts[:title], 
+    {
+      :title => @opts[:title],
       :width => @opts[:width] || 100,
-      :klass => self.class.name.split("::").last 
+      :klass => self.class.name.split("::").last
     }
   end
 
